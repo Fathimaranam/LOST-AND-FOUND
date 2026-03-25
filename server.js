@@ -57,6 +57,22 @@ db.connect(err => {
             console.log("NOTIFICATION table ready");
         }
     });
+
+    // Add DESCRIPTION column to FOUND_ITEM if it doesn't exist
+    const addDescColumnQuery = `
+        ALTER TABLE FOUND_ITEM 
+        ADD COLUMN DESCRIPTION TEXT
+    `;
+    
+    db.query(addDescColumnQuery, (err) => {
+        if (err && err.code !== 'ER_DUP_FIELDNAME') {
+            console.error("Error adding DESCRIPTION column:", err);
+        } else if (!err) {
+            console.log("DESCRIPTION column added");
+        } else {
+            console.log("DESCRIPTION column already exists");
+        }
+    });
 });
 
 app.get("/", (req, res) => {
@@ -103,11 +119,12 @@ app.get("/users", (req, res) => {
 // ================= ITEMS =================
 app.get("/items", (req, res) => {
     // Only show items that are still found / not claimed yet
-    db.query("SELECT * FROM FOUND_ITEM WHERE STATUS = 'Found'", (err, result) => {
+    db.query("SELECT ITEM_ID, ITEM_NAME, FOUND_DATE, STATUS, USER_ID, LOCATION_TEXT, PHOTO, DESCRIPTION FROM FOUND_ITEM WHERE STATUS = 'Found'", (err, result) => {
         if (err) {
-            console.error(err);
+            console.error("Error fetching items:", err);
             res.status(500).send("Error fetching items");
         } else {
+            console.log("Items fetched:", result.length, "items");
             res.json(result);
         }
     });
@@ -143,18 +160,29 @@ app.delete("/delete-item/:item_id", (req, res) => {
 
 app.post("/add-item", upload.single("photo"), (req, res) => {
 
-    const { item_name, user_id, location } = req.body; // ✅ NEW
+    console.log("Raw req.body:", req.body);
+    console.log("Raw req.file:", req.file);
+
+    const { item_name, user_id, location, description } = req.body;
     const photo = req.file ? req.file.filename : null;
 
+    console.log("Parsed data - item_name:", item_name, "user_id:", user_id, "location:", location, "description:", description, "photo:", photo);
+
+    if (!item_name || !user_id || !location || !description) {
+        console.log("Missing required fields");
+        return res.status(400).send("Missing required fields: item_name, user_id, location, description");
+    }
+
     db.query(
-        "INSERT INTO FOUND_ITEM (ITEM_NAME, FOUND_DATE, STATUS, USER_ID, LOCATION_TEXT, PHOTO) VALUES (?, CURDATE(), 'Found', ?, ?, ?)",
-        [item_name, user_id, location, photo],
+        "INSERT INTO FOUND_ITEM (ITEM_NAME, FOUND_DATE, STATUS, USER_ID, LOCATION_TEXT, PHOTO, DESCRIPTION) VALUES (?, CURDATE(), 'Found', ?, ?, ?, ?)",
+        [item_name, user_id, location, photo, description || ""],
         (err, result) => {
             if (err) {
-                console.error(err);
+                console.error("Error adding item:", err);
                 return res.status(500).send("Error adding item");
             }
 
+            console.log("Item added successfully with ID:", result.insertId);
             res.send("Item uploaded successfully");
         }
     );

@@ -415,6 +415,70 @@
         .mt-24 { margin-top: 24px; }
         .gap-12 { gap: 12px; }
 
+        /* ========== MODAL ========== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #E5E7EB;
+            padding-bottom: 16px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .modal-close {
+            font-size: 28px;
+            cursor: pointer;
+            color: #6B7280;
+            background: none;
+            border: none;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #F3F4F6;
+        }
+
         @media (max-width: 640px) {
             .container {
                 padding: 24px 16px;
@@ -476,6 +540,17 @@
     </div>
 
     <div id="contentArea"></div>
+</div>
+
+<!-- Claim Modal -->
+<div id="claimModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Claim Item</h2>
+            <button class="modal-close" onclick="closeClaimModal()">✕</button>
+        </div>
+        <div id="claimFormContainer"></div>
+    </div>
 </div>
 
 <div class="bottom-nav">
@@ -598,6 +673,18 @@ function loadItems() {
                             </div>
                         </div>
 
+                        ${item.DESCRIPTION ? `
+                            <div style="background: #F3F4F6; padding: 12px; border-radius: 8px; margin: 16px 0;">
+                                <div style="font-size: 13px; font-weight: 600; color: #111827; margin-bottom: 8px;">📍 Where to Claim:</div>
+                                <div style="font-size: 14px; color: #6B7280; line-height: 1.6;">${item.DESCRIPTION}</div>
+                            </div>
+                        ` : `
+                            <div style="background: #FEF3C7; padding: 12px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #F59E0B;">
+                                <div style="font-size: 13px; font-weight: 600; color: #92400E; margin-bottom: 8px;">📍 Where to Claim:</div>
+                                <div style="font-size: 14px; color: #92400E; line-height: 1.6;">No claim instructions provided. Please contact the uploader for details.</div>
+                            </div>
+                        `}
+
                         <div class="btn-group">
                             <button class="btn-primary" onclick="showClaimForm(${item.ITEM_ID})">Claim Item</button>
                             ${currentUser.role_id === 2 ? 
@@ -719,6 +806,12 @@ function showUpload() {
             </div>
 
             <div class="form-group">
+                <label for="description">Where to Claim (Description) *</label>
+                <textarea id="description" placeholder="e.g., Left in the library near the reading section. Contact office to retrieve. Available during office hours 9AM-5PM."></textarea>
+                <p style="font-size: 12px; color: #6B7280; margin-top: 8px;">Provide details about where the person can claim the item (office location, person's name, availability, etc.)</p>
+            </div>
+
+            <div class="form-group">
                 <label for="photoInput">Photo</label>
                 <input type="file" id="photoInput" accept="image/*">
                 <p style="font-size: 12px; color: #6B7280; margin-top: 8px;">Optional: Upload a photo to help identify the item</p>
@@ -733,10 +826,11 @@ function showUpload() {
 function addItem() {
     const name = document.getElementById("itemName").value.trim();
     const location = document.getElementById("locationSelect").value.trim();
+    const description = document.getElementById("description").value.trim();
     const photoFile = document.getElementById("photoInput").files[0];
 
-    if (!name || !location) {
-        alert("Please enter item name and select a location");
+    if (!name || !location || !description) {
+        alert("Please enter item name, location, and description");
         return;
     }
 
@@ -744,6 +838,7 @@ function addItem() {
     formData.append("item_name", name);
     formData.append("user_id", currentUser.user_id);
     formData.append("location", location);
+    formData.append("description", description);
     formData.append("photo", photoFile);
 
     fetch("http://localhost:3000/add-item", {
@@ -822,12 +917,85 @@ function showClaim() {
         .catch(err => console.error(err));
 }
 
+// ================= CLAIM MODAL FUNCTIONS =================
 function showClaimForm(itemId) {
-    showClaim();
-    setTimeout(() => {
-        document.getElementById("claimItem").value = itemId;
-    }, 100);
+    const modal = document.getElementById("claimModal");
+    const container = document.getElementById("claimFormContainer");
+
+    // Fetch item details
+    fetch("http://localhost:3000/items")
+        .then(res => res.json())
+        .then(items => {
+            const item = items.find(i => i.ITEM_ID === itemId);
+            
+            container.innerHTML = `
+                <div class="form-group">
+                    <label>Item</label>
+                    <div style="padding: 12px; background: #F3F4F6; border-radius: 8px; color: #111827; font-weight: 500;">
+                        ${item ? item.ITEM_NAME : "Item"}
+                    </div>
+                    <input type="hidden" id="claimItemId" value="${itemId}">
+                </div>
+
+                <div class="form-group">
+                    <label for="claimProof">Why do you believe this is yours? *</label>
+                    <textarea id="claimProof" placeholder="Describe identifying features, when you lost it, etc."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button class="btn-primary" style="flex: 1;" onclick="submitClaimFromModal()">Submit Claim</button>
+                    <button style="flex: 1; padding: 12px; background: #E5E7EB; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: #111827; transition: all 0.2s ease;" onclick="closeClaimModal()">Cancel</button>
+                </div>
+            `;
+
+            modal.classList.add("show");
+        })
+        .catch(err => {
+            alert("Error loading item: " + err.message);
+        });
 }
+
+function closeClaimModal() {
+    const modal = document.getElementById("claimModal");
+    modal.classList.remove("show");
+}
+
+function submitClaimFromModal() {
+    const itemId = document.getElementById("claimItemId").value;
+    const proof = document.getElementById("claimProof").value.trim();
+
+    if (!proof) {
+        alert("Please describe why you believe this is yours");
+        return;
+    }
+
+    fetch("http://localhost:3000/submit-claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            user_id: currentUser.user_id,
+            item_id: itemId,
+            proof: proof
+        })
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert("✅ " + data);
+        closeClaimModal();
+        loadItems();
+    })
+    .catch(err => {
+        alert("Error submitting claim: " + err.message);
+    });
+}
+
+// Close modal when clicking outside
+document.addEventListener("click", function(event) {
+    const modal = document.getElementById("claimModal");
+    if (event.target === modal) {
+        closeClaimModal();
+    }
+});
 
 // ================= SUBMIT CLAIM =================
 function submitClaim() {
