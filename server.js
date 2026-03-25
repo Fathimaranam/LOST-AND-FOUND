@@ -18,6 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static("uploads"));
 
 const db = mysql.createConnection({
     host: "localhost",
@@ -32,6 +33,30 @@ db.connect(err => {
         return;
     }
     console.log("Connected to MySQL");
+    
+    // Create NOTIFICATION table if it doesn't exist
+    const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS NOTIFICATION (
+            NOTIFICATION_ID INT AUTO_INCREMENT PRIMARY KEY,
+            USER_ID INT NOT NULL,
+            MESSAGE VARCHAR(255) NOT NULL,
+            CLAIM_ID INT,
+            IS_READ BOOLEAN DEFAULT 0,
+            CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (USER_ID) REFERENCES USER(USER_ID) ON DELETE CASCADE,
+            FOREIGN KEY (CLAIM_ID) REFERENCES CLAIM(CLAIM_ID) ON DELETE CASCADE,
+            KEY idx_user_notifications (USER_ID, IS_READ),
+            KEY idx_created_at (CREATED_AT)
+        )
+    `;
+    
+    db.query(createTableQuery, (err) => {
+        if (err) {
+            console.error("Error creating NOTIFICATION table:", err);
+        } else {
+            console.log("NOTIFICATION table ready");
+        }
+    });
 });
 
 app.get("/", (req, res) => {
@@ -77,7 +102,8 @@ app.get("/users", (req, res) => {
 
 // ================= ITEMS =================
 app.get("/items", (req, res) => {
-    db.query("SELECT * FROM FOUND_ITEM", (err, result) => {
+    // Only show items that are still found / not claimed yet
+    db.query("SELECT * FROM FOUND_ITEM WHERE STATUS = 'Found'", (err, result) => {
         if (err) {
             console.error(err);
             res.status(500).send("Error fetching items");
@@ -87,14 +113,42 @@ app.get("/items", (req, res) => {
     });
 });
 
+app.delete("/delete-item/:item_id", (req, res) => {
+    const role_id = req.body.role_id;
+    const item_id = req.params.item_id;
+
+    console.log("Delete request - item_id:", item_id, "role_id:", role_id);
+
+    if (role_id != 2) {
+        console.log("Not admin, role_id:", role_id);
+        return res.status(403).send("Only admin can delete items");
+    }
+
+    db.query("DELETE FROM CLAIM WHERE ITEM_ID = ?", [item_id], (err) => {
+        if (err) {
+            console.error("Error deleting claims:", err);
+            return res.status(500).send("Error deleting item claims");
+        }
+
+        db.query("DELETE FROM FOUND_ITEM WHERE ITEM_ID = ?", [item_id], (err2) => {
+            if (err2) {
+                console.error("Error deleting item:", err2);
+                return res.status(500).send("Error deleting item");
+            }
+            console.log("Item deleted successfully:", item_id);
+            res.send("Item deleted successfully");
+        });
+    });
+});
+
 app.post("/add-item", upload.single("photo"), (req, res) => {
 
-    const { item_name, user_id, location_id } = req.body;
+    const { item_name, user_id, location } = req.body; // ✅ NEW
     const photo = req.file ? req.file.filename : null;
 
     db.query(
-        "INSERT INTO FOUND_ITEM (ITEM_NAME, FOUND_DATE, STATUS, USER_ID, LOCATION_ID, PHOTO) VALUES (?, CURDATE(), 'Found', ?, ?, ?)",
-        [item_name, user_id, location_id, photo],
+        "INSERT INTO FOUND_ITEM (ITEM_NAME, FOUND_DATE, STATUS, USER_ID, LOCATION_TEXT, PHOTO) VALUES (?, CURDATE(), 'Found', ?, ?, ?)",
+        [item_name, user_id, location, photo],
         (err, result) => {
             if (err) {
                 console.error(err);
@@ -105,7 +159,6 @@ app.post("/add-item", upload.single("photo"), (req, res) => {
         }
     );
 });
-
 // ================= CLAIMS =================
 app.post("/submit-claim", (req, res) => {
     const { user_id, item_id, proof } = req.body;
@@ -150,27 +203,130 @@ app.get("/claims", (req, res) => {
 
 // ================= ADMIN ONLY CLAIM UPDATE =================
 app.put("/update-claim-status", (req, res) => {
+
     const { claim_id, status, role_id } = req.body;
 
-    // Only allow admin (role_id = 2)
+    // ✅ Only admin allowed
     if (role_id != 2) {
         return res.status(403).send("Only admin can update claim status");
     }
 
+    // ✅ Step 1: Update claim status
     db.query(
         "UPDATE CLAIM SET CLAIM_STATUS = ? WHERE CLAIM_ID = ?",
         [status, claim_id],
         (err, result) => {
+
             if (err) {
                 console.error(err);
-                res.status(500).send("Error updating claim");
+                return res.status(500).send("Error updating claim");
+            }
+
+            // ✅ Step 2: If Approved → remove item (mark as Claimed)
+            if (status === "Approved") {
+
+                // First, get the USER_ID from the claim
+                db.query(
+                    "SELECT USER_ID FROM CLAIM WHERE CLAIM_ID = ?",
+                    [claim_id],
+                    (err, claimData) => {
+                        if (err || claimData.length === 0) {
+                            console.error(err);
+                            return res.status(500).send("Error getting claim data");
+                        }
+
+                        const user_id = claimData[0].USER_ID;
+
+                        // Create notification for the user
+                        db.query(
+                            "INSERT INTO NOTIFICATION (USER_ID, MESSAGE, CLAIM_ID, IS_READ, CREATED_AT) VALUES (?, ?, ?, 0, NOW())",
+                            [user_id, "Your claim request has been approved!", claim_id],
+                            (errNotif) => {
+                                if (errNotif) {
+                                    console.error("Notification insert error:", errNotif);
+                                } else {
+                                    console.log("Notification created for user:", user_id);
+                                }
+                            }
+                        );
+
+                        // Update item status
+                        db.query(
+                            `UPDATE FOUND_ITEM 
+                             SET STATUS = 'Claimed' 
+                             WHERE ITEM_ID = (
+                                SELECT ITEM_ID FROM CLAIM WHERE CLAIM_ID = ?
+                             )`,
+                            [claim_id],
+                            (err2) => {
+
+                                if (err2) {
+                                    console.error(err2);
+                                    return res.status(500).send("Error updating item");
+                                }
+
+                                return res.send("Claim approved and item removed");
+                            }
+                        );
+                    }
+                );
+
             } else {
+                // If rejected
                 res.send("Claim status updated");
             }
         }
     );
 });
 
+// ================= NOTIFICATIONS =================
+app.get("/notifications/:user_id", (req, res) => {
+    const user_id = req.params.user_id;
+
+    db.query(
+        "SELECT * FROM NOTIFICATION WHERE USER_ID = ? ORDER BY CREATED_AT DESC LIMIT 10",
+        [user_id],
+        (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send("Error fetching notifications");
+            }
+            res.json(result);
+        }
+    );
+});
+
+app.get("/notifications-count/:user_id", (req, res) => {
+    const user_id = req.params.user_id;
+
+    db.query(
+        "SELECT COUNT(*) as unread_count FROM NOTIFICATION WHERE USER_ID = ? AND IS_READ = 0",
+        [user_id],
+        (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send("Error fetching notification count");
+            }
+            res.json(result[0]);
+        }
+    );
+});
+
+app.put("/mark-notification-read/:notification_id", (req, res) => {
+    const notification_id = req.params.notification_id;
+
+    db.query(
+        "UPDATE NOTIFICATION SET IS_READ = 1 WHERE NOTIFICATION_ID = ?",
+        [notification_id],
+        (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send("Error marking notification as read");
+            }
+            res.send("Notification marked as read");
+        }
+    );
+});
 
 // ================= START SERVER =================
 app.listen(3000, () => {

@@ -1,79 +1,454 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Campus Lost & Found Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
+    <title>Campus Lost & Found</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: 'Poppins', sans-serif;
-            background: #eef1f5;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #F9FAFB;
+            color: #111827;
+            line-height: 1.5;
         }
 
         .container {
-            padding: 20px;
-            max-width: 600px;
-            margin: auto;
-            margin-bottom: 80px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            padding-bottom: 120px;
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .header-left .subtitle {
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        /* ========== NOTIFICATIONS ========== */
+        .notification-bell {
+            position: relative;
+            font-size: 24px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .notification-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #EF4444;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 40px;
+            right: 0;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+        }
+
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #F3F4F6;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background: #F9FAFB;
+        }
+
+        .notification-item.unread {
+            background: #EFF6FF;
+            font-weight: 500;
+        }
+
+        .notification-text {
+            font-size: 14px;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+
+        .notification-empty {
+            padding: 32px 16px;
+            text-align: center;
+            color: #9CA3AF;
         }
 
         h1 {
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 20px;
+            font-size: 32px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
         }
 
-        .toggle-bar {
+        .subtitle {
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        /* ========== TABS ========== */
+        .tabs {
             display: flex;
-            background: #ddd;
-            border-radius: 30px;
-            overflow: hidden;
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 32px;
+            border-bottom: 1px solid #E5E7EB;
         }
 
-        .toggle-bar button {
-            flex: 1;
-            padding: 12px;
+        .tab-button {
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
             border: none;
             background: transparent;
+            color: #6B7280;
             cursor: pointer;
-            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            margin-bottom: -1px;
         }
 
-        .active {
-            background: #5b9bd5;
-            color: white;
+        .tab-button:hover {
+            color: #111827;
         }
 
+        .tab-button.active {
+            color: #2563EB;
+            border-bottom-color: #2563EB;
+        }
+
+        /* ========== CARDS ========== */
         .card {
             background: white;
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.2s ease;
         }
 
-        .status-approved { color: green; font-weight: 600; }
-        .status-pending { color: orange; font-weight: 600; }
-        .status-rejected { color: red; font-weight: 600; }
+        .card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
 
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .card-subtitle {
+            font-size: 14px;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+
+        .item-image {
+            width: 100%;
+            height: auto;
+            max-width: 400px;
+            max-height: 250px;
+            border-radius: 8px;
+            margin: 16px auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .item-meta {
+            display: flex;
+            gap: 24px;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+
+        .item-meta-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .item-meta-label {
+            color: #6B7280;
+            font-weight: 500;
+        }
+
+        .item-meta-value {
+            color: #111827;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .status-found {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-claimed {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        /* ========== FORMS ========== */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-family: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="file"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* ========== BUTTONS ========== */
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #2563EB;
+            color: white;
+            padding: 12px 24px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: #1D4ED8;
+        }
+
+        .btn-primary:active {
+            background: #1E40AF;
+        }
+
+        .btn-secondary {
+            background: #F3F4F6;
+            color: #111827;
+            padding: 12px 24px;
+            font-size: 14px;
+            border: 1px solid #E5E7EB;
+        }
+
+        .btn-secondary:hover {
+            background: #E5E7EB;
+        }
+
+        .btn-danger {
+            background: #EF4444;
+            color: white;
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+
+        .btn-danger:hover {
+            background: #DC2626;
+        }
+
+        .btn-success {
+            background: #10B981;
+            color: white;
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        /* ========== BOTTOM NAVIGATION ========== */
         .bottom-nav {
             position: fixed;
             bottom: 0;
+            left: 0;
+            right: 0;
             width: 100%;
             background: white;
+            border-top: 1px solid #E5E7EB;
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            padding: 12px 0;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+            z-index: 100;
         }
 
-        .bottom-nav div {
+        .nav-item {
             text-align: center;
-            font-size: 12px;
             cursor: pointer;
+            padding: 8px 12px;
+            font-size: 11px;
+            color: #6B7280;
+            transition: color 0.2s ease;
+            flex: 1;
+        }
+
+        .nav-item:hover {
+            color: #2563EB;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        /* ========== EMPTY STATE ========== */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #6B7280;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        /* ========== UTILITY ========== */
+        .mt-16 { margin-top: 16px; }
+        .mt-24 { margin-top: 24px; }
+        .gap-12 { gap: 12px; }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px 16px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .tabs {
+                gap: 4px;
+            }
+
+            .tab-button {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .item-meta {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn-group button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -81,27 +456,38 @@
 <body>
 
 <div class="container">
-    <h1>Campus Lost & Found</h1>
+    <div class="header">
+        <div class="header-left">
+            <h1>Campus Lost & Found</h1>
+            <p class="subtitle">Find and claim lost items on campus</p>
+        </div>
+        <div class="notification-bell" onclick="toggleNotifications()">
+            🔔
+            <span class="notification-count" id="notificationCount" style="display: none;">0</span>
+            <div class="notification-dropdown" id="notificationDropdown">
+                <div id="notificationList"></div>
+            </div>
+        </div>
+    </div>
 
-    <div class="toggle-bar">
-        <button id="itemsTab" class="active" onclick="loadItems()">Items</button>
-        <button id="claimsTab" onclick="loadClaims()">Claims</button>
+    <div class="tabs">
+        <button id="itemsTab" class="tab-button active" onclick="loadItems()">Items</button>
+        <button id="claimsTab" class="tab-button" onclick="loadClaims()">Claims</button>
     </div>
 
     <div id="contentArea"></div>
 </div>
 
 <div class="bottom-nav">
-    <div onclick="goHome()">🏠<br>Home</div>
-      <div onclick="showSearch()">🔍<br>Search</div>
-    <div onclick="showUpload()">⬆<br>Upload</div>
-    <div onclick="showClaim()">📩<br>Claim</div>
-    <div onclick="showProfile()">👤<br>Profile</div>
+    <div class="nav-item" onclick="goHome()"><div class="nav-icon">🏠</div>Home</div>
+    <div class="nav-item" onclick="showSearch()"><div class="nav-icon">🔍</div>Search</div>
+    <div class="nav-item" onclick="showUpload()"><div class="nav-icon">⬆️</div>Upload</div>
+    <div class="nav-item" onclick="showClaim()"><div class="nav-icon">📋</div>Claim</div>
+    <div class="nav-item" onclick="showProfile()"><div class="nav-icon">👤</div>Profile</div>
 </div>
 
 <script>
 
-// Redirect if not logged in
 if (!localStorage.getItem("role_id")) {
     window.location.href = "login.html";
 }
@@ -110,6 +496,55 @@ let currentUser = {
     user_id: parseInt(localStorage.getItem("user_id")),
     role_id: parseInt(localStorage.getItem("role_id"))
 };
+
+// ================= NOTIFICATIONS =================
+function loadNotifications() {
+    fetch(`http://localhost:3000/notifications/${currentUser.user_id}`)
+        .then(res => res.json())
+        .then(notifications => {
+            const notificationList = document.getElementById("notificationList");
+            const notificationCount = document.getElementById("notificationCount");
+
+            if (notifications.length === 0) {
+                notificationList.innerHTML = '<div class="notification-empty">No new notifications</div>';
+                notificationCount.style.display = "none";
+            } else {
+                const unreadCount = notifications.filter(n => !n.IS_READ).length;
+                notificationCount.textContent = unreadCount;
+                notificationCount.style.display = unreadCount > 0 ? "flex" : "none";
+
+                notificationList.innerHTML = notifications.map(notif => `
+                    <div class="notification-item ${notif.IS_READ ? '' : 'unread'}" onclick="markNotificationRead(${notif.NOTIFICATION_ID})">
+                        <div class="notification-text">${notif.MESSAGE}</div>
+                        <div class="notification-time">${new Date(notif.CREATED_AT).toLocaleString()}</div>
+                    </div>
+                `).join('');
+            }
+        })
+        .catch(err => console.error("Error loading notifications:", err));
+}
+
+function toggleNotifications() {
+    const dropdown = document.getElementById("notificationDropdown");
+    dropdown.classList.toggle("show");
+    if (dropdown.classList.contains("show")) {
+        loadNotifications();
+    }
+}
+
+function markNotificationRead(notification_id) {
+    fetch(`http://localhost:3000/mark-notification-read/${notification_id}`, {
+        method: "PUT"
+    })
+    .then(() => loadNotifications())
+    .catch(err => console.error("Error marking notification as read:", err));
+}
+
+// Load notifications on page load and refresh every 30 seconds
+window.addEventListener("load", () => {
+    loadNotifications();
+    setInterval(loadNotifications, 30000);
+});
 
 function setActive(tab) {
     document.getElementById("itemsTab").classList.remove("active");
@@ -127,18 +562,61 @@ function loadItems() {
             const area = document.getElementById("contentArea");
             area.innerHTML = "";
 
+            if (data.length === 0) {
+                area.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-title">No items found</div>
+                        <p>All items have been claimed. Check back soon!</p>
+                    </div>
+                `;
+                return;
+            }
+
             data.forEach(item => {
                 area.innerHTML += `
                     <div class="card">
-                        <strong>${item.ITEM_NAME}</strong><br>
-                        Status: ${item.STATUS}
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">${item.ITEM_NAME}</div>
+                                <div class="card-subtitle">Found on campus</div>
+                            </div>
+                        </div>
+
                         ${item.PHOTO ? 
-                        `<img src="http://localhost:3000/uploads/${item.PHOTO}" 
-                              style="width:100%;margin-top:10px;border-radius:10px;">`
+                            `<img src="http://localhost:3000/uploads/${item.PHOTO}" alt="${item.ITEM_NAME}" class="item-image">`
                         : ""}
+
+                        <div class="item-meta">
+                            <div class="item-meta-group">
+                                <div class="item-meta-label">Location</div>
+                                <div class="item-meta-value">${item.LOCATION_TEXT || "Not specified"}</div>
+                            </div>
+                            <div class="item-meta-group">
+                                <div class="item-meta-label">Status</div>
+                                <div class="status-badge status-found">${item.STATUS}</div>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn-primary" onclick="showClaimForm(${item.ITEM_ID})">Claim Item</button>
+                            ${currentUser.role_id === 2 ? 
+                                `<button class="btn-danger" onclick="deleteItem(${item.ITEM_ID})">Delete</button>`
+                            : ""}
+                        </div>
                     </div>
                 `;
             });
+        })
+        .catch(err => {
+            console.error("Error loading items:", err);
+            document.getElementById("contentArea").innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚠️</div>
+                    <div class="empty-state-title">Error loading items</div>
+                    <p>Please try again later</p>
+                </div>
+            `;
         });
 }
 
@@ -152,33 +630,64 @@ function loadClaims() {
             const area = document.getElementById("contentArea");
             area.innerHTML = "";
 
-            data.forEach(claim => {
+            if (data.length === 0) {
+                area.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-title">No claims yet</div>
+                        <p>Claims will appear here</p>
+                    </div>
+                `;
+                return;
+            }
 
-                let statusClass = "";
-                if (claim.CLAIM_STATUS === "Approved") statusClass = "status-approved";
-                if (claim.CLAIM_STATUS === "Pending") statusClass = "status-pending";
-                if (claim.CLAIM_STATUS === "Rejected") statusClass = "status-rejected";
+            data.forEach(claim => {
+                let statusColor = "status-found";
+                if (claim.CLAIM_STATUS === "Approved") statusColor = "status-found";
+                if (claim.CLAIM_STATUS === "Pending") statusColor = "status-found";
+                if (claim.CLAIM_STATUS === "Rejected") statusColor = "status-claimed";
 
                 let adminButtons = "";
                 if (currentUser.role_id === 2) {
                     adminButtons = `
-                        <button onclick="updateStatus(${claim.CLAIM_ID}, 'Approved')">Approve</button>
-                        <button onclick="updateStatus(${claim.CLAIM_ID}, 'Rejected')">Reject</button>
+                        <div class="btn-group">
+                            <button class="btn-success" onclick="updateStatus(${claim.CLAIM_ID}, 'Approved')">Approve</button>
+                            <button class="btn-danger" onclick="updateStatus(${claim.CLAIM_ID}, 'Rejected')">Reject</button>
+                        </div>
                     `;
                 }
 
                 area.innerHTML += `
                     <div class="card">
-                        <strong>Item:</strong> ${claim.ITEM_NAME}<br>
-                        <strong>User:</strong> ${claim.USER_NAME}<br>
-                        <strong>Description:</strong> ${claim.PROOF_DESCRIPTION}<br>
-                        <span class="${statusClass}">
-                            ${claim.CLAIM_STATUS}
-                        </span><br>
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">${claim.ITEM_NAME}</div>
+                                <div class="card-subtitle">Claim by ${claim.USER_NAME}</div>
+                            </div>
+                            <div class="status-badge ${statusColor}">${claim.CLAIM_STATUS}</div>
+                        </div>
+
+                        <div class="item-meta">
+                            <div class="item-meta-group">
+                                <div class="item-meta-label">Description</div>
+                                <div class="item-meta-value">${claim.PROOF_DESCRIPTION}</div>
+                            </div>
+                        </div>
+
                         ${adminButtons}
                     </div>
                 `;
             });
+        })
+        .catch(err => {
+            console.error("Error loading claims:", err);
+            document.getElementById("contentArea").innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚠️</div>
+                    <div class="empty-state-title">Error loading claims</div>
+                    <p>Please try again later</p>
+                </div>
+            `;
         });
 }
 
@@ -188,34 +697,53 @@ function showUpload() {
 
     area.innerHTML = `
         <div class="card">
-            <h3>Upload Found Item</h3>
+            <h2 class="card-title">Upload Found Item</h2>
+            <p class="card-subtitle mt-16">Help return lost items to their owners</p>
 
-            <input type="text" id="itemName" placeholder="Item Name"><br><br>
+            <div class="form-group mt-24">
+                <label for="itemName">Item Name *</label>
+                <input type="text" id="itemName" placeholder="e.g., Blue backpack, iPhone 13">
+            </div>
 
-            <select id="locationSelect">
-                <option value="1">Office - 101</option>
-                <option value="2">Mech Block - 312</option>
-                <option value="3">CSE Block - 204</option>
-            </select><br><br>
+            <div class="form-group">
+                <label for="locationSelect">Location Found *</label>
+                <select id="locationSelect" onchange="handleLocationChange()">
+                    <option value="">-- Select a location --</option>
+                    <option value="Office - 101">Office - 101</option>
+                    <option value="Mech Block - 312">Mech Block - 312</option>
+                    <option value="CSE Block - 204">CSE Block - 204</option>
+                    <option value="Library - First Floor">Library - First Floor</option>
+                    <option value="Cafeteria">Cafeteria</option>
+                    <option value="New Location">+ Add new location</option>
+                </select>
+            </div>
 
-            <input type="file" id="photoInput"><br><br>
+            <div class="form-group">
+                <label for="photoInput">Photo</label>
+                <input type="file" id="photoInput" accept="image/*">
+                <p style="font-size: 12px; color: #6B7280; margin-top: 8px;">Optional: Upload a photo to help identify the item</p>
+            </div>
 
-            <button onclick="addItem()">Upload</button>
+            <button class="btn-primary" onclick="addItem()">Upload Item</button>
         </div>
     `;
 }
 
 // ================= ADD ITEM =================
 function addItem() {
-
-    const name = document.getElementById("itemName").value;
-    const locationId = document.getElementById("locationSelect").value;
+    const name = document.getElementById("itemName").value.trim();
+    const location = document.getElementById("locationSelect").value.trim();
     const photoFile = document.getElementById("photoInput").files[0];
+
+    if (!name || !location) {
+        alert("Please enter item name and select a location");
+        return;
+    }
 
     const formData = new FormData();
     formData.append("item_name", name);
     formData.append("user_id", currentUser.user_id);
-    formData.append("location_id", locationId);
+    formData.append("location", location);
     formData.append("photo", photoFile);
 
     fetch("http://localhost:3000/add-item", {
@@ -224,42 +752,92 @@ function addItem() {
     })
     .then(res => res.text())
     .then(data => {
-        alert(data);
+        alert("✅ " + data);
         loadItems();
+    })
+    .catch(err => {
+        alert("Error uploading item: " + err.message);
     });
+}
+
+function handleLocationChange() {
+    const select = document.getElementById("locationSelect");
+    if (select.value === "New Location") {
+        const custom = prompt("Enter the new location (e.g., 'Parking Lot - A'):");
+        if (custom && custom.trim() !== "") {
+            const option = document.createElement("option");
+            option.value = custom.trim();
+            option.text = custom.trim();
+            option.selected = true;
+            select.add(option, select.options[select.options.length - 1]);
+        } else {
+            select.value = "";
+            if (custom !== null) alert("Location cannot be empty");
+        }
+    }
 }
 
 // ================= CLAIM FORM =================
 function showClaim() {
-
     fetch("http://localhost:3000/items")
         .then(res => res.json())
         .then(data => {
+            if (data.length === 0) {
+                document.getElementById("contentArea").innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-title">No items available</div>
+                        <p>There are no items to claim at the moment</p>
+                    </div>
+                `;
+                return;
+            }
 
-            let options = "";
+            let options = '<option value="">-- Select an item --</option>';
             data.forEach(item => {
-                options += `<option value="${item.ITEM_ID}">
-                                ${item.ITEM_NAME}
-                            </option>`;
+                options += `<option value="${item.ITEM_ID}">${item.ITEM_NAME} (${item.LOCATION_TEXT || "Location TBD"})</option>`;
             });
 
             document.getElementById("contentArea").innerHTML = `
                 <div class="card">
-                    <h3>Submit Claim</h3>
-                    <select id="claimItem">${options}</select><br><br>
-                    <textarea id="claimDescription" 
-                        placeholder="Enter description"></textarea><br><br>
-                    <button onclick="submitClaim()">Submit</button>
+                    <h2 class="card-title">Submit a Claim</h2>
+                    <p class="card-subtitle mt-16">Is this your lost item? Submit a claim with proof</p>
+
+                    <div class="form-group mt-24">
+                        <label for="claimItem">Select Item *</label>
+                        <select id="claimItem">
+                            ${options}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="claimDescription">Description or Proof *</label>
+                        <textarea id="claimDescription" placeholder="Describe distinctive features that prove it's yours..."></textarea>
+                    </div>
+
+                    <button class="btn-primary" onclick="submitClaim()">Submit Claim</button>
                 </div>
             `;
-        });
+        })
+        .catch(err => console.error(err));
+}
+
+function showClaimForm(itemId) {
+    showClaim();
+    setTimeout(() => {
+        document.getElementById("claimItem").value = itemId;
+    }, 100);
 }
 
 // ================= SUBMIT CLAIM =================
 function submitClaim() {
-
     const itemId = document.getElementById("claimItem").value;
-    const description = document.getElementById("claimDescription").value;
+    const description = document.getElementById("claimDescription").value.trim();
+
+    if (!itemId || !description) {
+        alert("Please select an item and provide a description");
+        return;
+    }
 
     fetch("http://localhost:3000/submit-claim", {
         method: "POST",
@@ -272,8 +850,11 @@ function submitClaim() {
     })
     .then(res => res.text())
     .then(data => {
-        alert(data);
+        alert("✅ " + data);
         loadItems();
+    })
+    .catch(err => {
+        alert("Error submitting claim: " + err.message);
     });
 }
 
@@ -282,80 +863,145 @@ function updateStatus(claimId, status) {
     fetch("http://localhost:3000/update-claim-status", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ claim_id: claimId, status: status })
+        body: JSON.stringify({
+            claim_id: claimId,
+            status: status,
+            role_id: currentUser.role_id
+        })
     })
     .then(res => res.text())
     .then(data => {
-        alert(data);
+        alert("✅ " + data);
         loadClaims();
+    })
+    .catch(err => {
+        alert("Error updating claim: " + err.message);
     });
 }
 
-function goHome() {
-    loadItems();
+// ================= DELETE ITEM =================
+function deleteItem(itemId) {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+
+    fetch(`http://localhost:3000/delete-item/${itemId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role_id: currentUser.role_id })
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert("✅ " + data);
+        loadItems();
+    })
+    .catch(err => {
+        alert("Error deleting item: " + err.message);
+    });
 }
 
-function showProfile() {
+// ================= SEARCH =================
+function showSearch() {
     document.getElementById("contentArea").innerHTML = `
         <div class="card">
-            <h3>Profile</h3>
-            Name: ${localStorage.getItem("user_name")}<br>
-            Email: ${localStorage.getItem("user_email")}<br><br>
-            <button onclick="logout()">Logout</button>
-        </div>
-    `;
-}
+            <h2 class="card-title">Search Items</h2>
+            <p class="card-subtitle mt-16">Find items by name or location</p>
 
-function logout() {
-    localStorage.clear();
-    window.location.href = "login.html";
-}
+            <div class="form-group mt-24">
+                <label for="searchInput">Search</label>
+                <input type="text" id="searchInput" placeholder="Search items..." oninput="searchItem()">
+            </div>
 
-loadItems();
-function showSearch() {
-
-    const area = document.getElementById("contentArea");
-
-    area.innerHTML = `
-        <div class="card">
-            <h3>Search Item</h3>
-            <input type="text" id="searchInput"
-                placeholder="Enter item name"
-                style="width:100%;padding:10px;margin-top:10px;">
-            <button onclick="searchItem()"
-                style="margin-top:10px;padding:10px;width:100%;background:#5b9bd5;color:white;border:none;border-radius:10px;">
-                Search
-            </button>
+            <div id="searchResults"></div>
         </div>
     `;
 }
 
 function searchItem() {
+    const value = document.getElementById("searchInput").value.toLowerCase();
+    const resultsArea = document.getElementById("searchResults");
 
-    const value = document.getElementById("searchInput").value;
+    if (!value.trim()) {
+        resultsArea.innerHTML = "";
+        return;
+    }
 
     fetch("http://localhost:3000/items")
         .then(res => res.json())
         .then(data => {
+            resultsArea.innerHTML = "";
 
-            const area = document.getElementById("contentArea");
-            area.innerHTML = "";
+            const filtered = data.filter(item =>
+                item.ITEM_NAME.toLowerCase().includes(value) ||
+                (item.LOCATION_TEXT && item.LOCATION_TEXT.toLowerCase().includes(value))
+            );
 
-            data.filter(item =>
-                item.ITEM_NAME.toLowerCase().includes(value.toLowerCase())
-            )
-            .forEach(item => {
+            if (filtered.length === 0) {
+                resultsArea.innerHTML = `
+                    <div class="empty-state" style="padding: 24px 0;">
+                        <p>No items match your search</p>
+                    </div>
+                `;
+                return;
+            }
 
-                area.innerHTML += `
-                    <div class="card">
-                        <strong>${item.ITEM_NAME}</strong><br>
-                        Status: ${item.STATUS}
+            filtered.forEach(item => {
+                resultsArea.innerHTML += `
+                    <div class="card mt-16">
+                        <div class="card-title">${item.ITEM_NAME}</div>
+                        <div class="card-subtitle">Location: ${item.LOCATION_TEXT || "Not specified"}</div>
+                        ${item.PHOTO ? 
+                            `<img src="http://localhost:3000/uploads/${item.PHOTO}" alt="${item.ITEM_NAME}" class="item-image">`
+                        : ""}
+                        <button class="btn-primary mt-16" onclick="showClaimForm(${item.ITEM_ID})">Claim Item</button>
                     </div>
                 `;
             });
-        });
+        })
+        .catch(err => console.error(err));
 }
-</script>
 
+// ================= NAVIGATION =================
+function goHome() {
+    loadItems();
+}
+
+function showProfile() {
+    const userName = localStorage.getItem("user_name") || "User";
+    const userEmail = localStorage.getItem("user_email") || "email@example.com";
+    const roleText = currentUser.role_id === 2 ? "Admin" : "Student";
+
+    document.getElementById("contentArea").innerHTML = `
+        <div class="card">
+            <h2 class="card-title">Profile</h2>
+
+            <div class="item-meta mt-24">
+                <div class="item-meta-group">
+                    <div class="item-meta-label">Name</div>
+                    <div class="item-meta-value">${userName}</div>
+                </div>
+                <div class="item-meta-group">
+                    <div class="item-meta-label">Email</div>
+                    <div class="item-meta-value">${userEmail}</div>
+                </div>
+                <div class="item-meta-group">
+                    <div class="item-meta-label">Role</div>
+                    <div class="item-meta-value">${roleText}</div>
+                </div>
+            </div>
+
+            <button class="btn-danger mt-24" onclick="logout()">Logout</button>
+        </div>
+    `;
+}
+
+function logout() {
+    if (confirm("Are you sure you want to logout?")) {
+        localStorage.clear();
+        window.location.href = "login.html";
+    }
+}
+
+// ================= INIT =================
+loadItems();
+</script>
 </body>
 </html>

@@ -1,25 +1,29 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
-    <title>Campus Lost & Found - Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>Campus Lost & Found - Secure Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
         }
 
         body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             height: 100vh;
             display: flex;
+            background: #F9FAFB;
         }
 
+        /* ========== LEFT SECTION ========== */
         .left-section {
             flex: 1;
-            background: linear-gradient(135deg, #4e73df, #6f42c1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             display: flex;
             flex-direction: column;
@@ -29,101 +33,253 @@
             text-align: center;
         }
 
+        .icon-wrapper {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            margin-bottom: 32px;
+            backdrop-filter: blur(10px);
+        }
+
         .left-section h1 {
             font-size: 40px;
-            margin-bottom: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.2;
         }
 
         .left-section p {
             font-size: 18px;
             opacity: 0.9;
+            line-height: 1.6;
         }
 
-        .left-section img {
-            width: 120px;
-            margin-bottom: 30px;
-        }
-
+        /* ========== RIGHT SECTION ========== */
         .right-section {
             flex: 1;
-            background: #f8f9fc;
+            background: white;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 40px;
         }
 
         .login-box {
-            width: 400px;
+            width: 100%;
+            max-width: 420px;
         }
 
-        .login-box h2 {
-            margin-bottom: 25px;
-            font-weight: 600;
+        .login-header {
+            margin-bottom: 32px;
         }
 
+        .login-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        /* ========== ROLE BUTTONS ========== */
         .role-buttons {
             display: flex;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 32px;
+            background: #F3F4F6;
+            padding: 4px;
+            border-radius: 8px;
         }
 
         .role-buttons button {
             flex: 1;
-            padding: 10px;
+            padding: 12px 16px;
             border: none;
             cursor: pointer;
             font-weight: 600;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            background: transparent;
+            color: #6B7280;
         }
 
-        .admin-btn {
-            background: #e2e6ea;
-        }
-
-        .user-btn {
-            background: #4e73df;
+        .role-buttons button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        /* ========== FORM INPUTS ========== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 8px;
         }
 
         input {
             width: 100%;
             padding: 12px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+            font-size: 14px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-family: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input::placeholder {
+            color: #9CA3AF;
+        }
+
+        /* ========== LOGIN BUTTON ========== */
         .login-btn {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(90deg, #4e73df, #6f42c1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
         }
 
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ========== SIGNUP LINK ========== */
         .signup-link {
-            margin-top: 15px;
             text-align: center;
             font-size: 14px;
+            color: #6B7280;
+            margin-bottom: 24px;
         }
 
         .signup-link a {
-            color: #4e73df;
+            color: #667eea;
             font-weight: 600;
             text-decoration: none;
+            transition: color 0.2s ease;
         }
 
         .signup-link a:hover {
-            text-decoration: underline;
+            color: #764ba2;
         }
 
+        /* ========== DEMO BOX ========== */
         .demo-box {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e9ecef;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 16px;
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #6B7280;
+            line-height: 1.6;
+        }
+
+        .demo-box strong {
+            color: #111827;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .demo-credentials {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .demo-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .demo-label {
+            font-weight: 500;
+            color: #111827;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .left-section {
+                flex: 0 0 auto;
+                padding: 40px 24px;
+            }
+
+            .right-section {
+                flex: 1;
+                padding: 24px;
+            }
+
+            .left-section h1 {
+                font-size: 28px;
+            }
+
+            .left-section p {
+                font-size: 16px;
+            }
+
+            .icon-wrapper {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .right-section {
+                padding: 16px;
+            }
+
+            .login-box {
+                max-width: 100%;
+            }
+
+            .login-header h2 {
+                font-size: 24px;
+            }
+
+            .demo-box {
+                font-size: 12px;
+            }
+
+            .demo-item {
+                flex-direction: column;
+                gap: 4px;
+            }
         }
     </style>
 </head>
@@ -131,37 +287,59 @@
 <body>
 
     <div class="left-section">
-        <img src="https://cdn-icons-png.flaticon.com/512/679/679720.png">
+        <div class="icon-wrapper">
+            <svg width="60" height="60" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 8H36C37.1046 8 38 8.89543 38 10V14H10V10C10 8.89543 10.8954 8 12 8Z" fill="white" opacity="0.8"/>
+                <path d="M10 16H38V36C38 37.1046 37.1046 38 36 38H12C10.8954 38 10 37.1046 10 36V16Z" fill="white"/>
+                <path d="M18 22H30V24H18V22Z" fill="rgba(255, 255, 255, 0.6)"/>
+                <path d="M18 28H30V30H18V28Z" fill="rgba(255, 255, 255, 0.6)"/>
+            </svg>
+        </div>
         <h1>Campus Lost & Found</h1>
         <p>Track, Report and Recover Lost Items Easily</p>
     </div>
 
     <div class="right-section">
         <div class="login-box">
-            <h2>Secure Login</h2>
-
-            <div class="role-buttons">
-                <button class="admin-btn" onclick="setRole(2)">Admin</button>
-                <button class="user-btn" onclick="setRole(1)">User</button>
+            <div class="login-header">
+                <h2>Secure Login</h2>
+                <p>Sign in with your campus email</p>
             </div>
 
-            <input type="email" id="email" placeholder="Enter Email">
-            <input type="password" id="password" placeholder="Enter Password">
+            <div class="role-buttons">
+                <button class="active" onclick="setRole(1)">User</button>
+                <button onclick="setRole(2)">Admin</button>
+            </div>
 
-            <button class="login-btn" onclick="login()">Login</button>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="your@tkmce.ac.in">
+            </div>
 
-            <!-- ✅ SIGN UP ADDED HERE -->
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password">
+            </div>
+
+            <button class="login-btn" onclick="login()">Sign In</button>
+
             <div class="signup-link">
-                Don’t have an account?
-                <a href="signup.html">Sign Up</a>
+                Don't have an account? <a href="signup.html">Create one</a>
             </div>
 
             <div class="demo-box">
-                <strong>Demo Credentials:</strong><br><br>
-                Admin: admin@campus.com / admin123<br>
-                User: user@campus.com / user123
+                <strong>Demo Credentials:</strong>
+                <div class="demo-credentials">
+                    <div class="demo-item">
+                        <span class="demo-label">Admin:</span>
+                        <span>admin@tkmce.ac.in / admin123</span>
+                    </div>
+                    <div class="demo-item">
+                        <span class="demo-label">User:</span>
+                        <span>user@tkmce.ac.in / user123</span>
+                    </div>
+                </div>
             </div>
-        </div>
     </div>
 
 <script>
@@ -169,40 +347,26 @@ let selectedRole = 1;
 
 function setRole(role) {
     selectedRole = role;
-    
-    const adminBtn = document.querySelector('.admin-btn');
-    const userBtn = document.querySelector('.user-btn');
-    
+    const buttons = document.querySelectorAll('.role-buttons button');
+    buttons.forEach(btn => btn.classList.remove('active'));
     if (role === 2) {
-        adminBtn.style.background = '#4e73df';
-        adminBtn.style.color = 'white';
-        userBtn.style.background = '#e2e6ea';
-        userBtn.style.color = 'black';
+        buttons[1].classList.add('active');
     } else {
-        userBtn.style.background = '#4e73df';
-        userBtn.style.color = 'white';
-        adminBtn.style.background = '#e2e6ea';
-        adminBtn.style.color = 'black';
+        buttons[0].classList.add('active');
     }
 }
 
 function login() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
     if (!email || !password) {
         alert("Please enter email and password");
         return;
     }
-
     fetch("http://localhost:3000/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            email: email,
-            password: password,
-            role_id: selectedRole
-        })
+        body: JSON.stringify({ email, password, role_id: selectedRole })
     })
     .then(res => res.json())
     .then(data => {
@@ -224,3 +388,5 @@ setRole(1);
 
 </body>
 </html>
+
+
