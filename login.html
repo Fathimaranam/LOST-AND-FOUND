@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Campus Lost & Found - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+        }
+
+        .left-section {
+            flex: 1;
+            background: linear-gradient(135deg, #4e73df, #6f42c1);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            text-align: center;
+        }
+
+        .left-section h1 {
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+
+        .left-section p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .left-section img {
+            width: 120px;
+            margin-bottom: 30px;
+        }
+
+        .right-section {
+            flex: 1;
+            background: #f8f9fc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-box {
+            width: 400px;
+        }
+
+        .login-box h2 {
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .role-buttons {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .role-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .admin-btn {
+            background: #e2e6ea;
+        }
+
+        .user-btn {
+            background: #4e73df;
+            color: white;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #4e73df, #6f42c1);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .signup-link {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .signup-link a {
+            color: #4e73df;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .demo-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="left-section">
+        <img src="https://cdn-icons-png.flaticon.com/512/679/679720.png">
+        <h1>Campus Lost & Found</h1>
+        <p>Track, Report and Recover Lost Items Easily</p>
+    </div>
+
+    <div class="right-section">
+        <div class="login-box">
+            <h2>Secure Login</h2>
+
+            <div class="role-buttons">
+                <button class="admin-btn" onclick="setRole(2)">Admin</button>
+                <button class="user-btn" onclick="setRole(1)">User</button>
+            </div>
+
+            <input type="email" id="email" placeholder="Enter Email">
+            <input type="password" id="password" placeholder="Enter Password">
+
+            <button class="login-btn" onclick="login()">Login</button>
+
+            <!-- ✅ SIGN UP ADDED HERE -->
+            <div class="signup-link">
+                Don’t have an account?
+                <a href="signup.html">Sign Up</a>
+            </div>
+
+            <div class="demo-box">
+                <strong>Demo Credentials:</strong><br><br>
+                Admin: admin@campus.com / admin123<br>
+                User: user@campus.com / user123
+            </div>
+        </div>
+    </div>
+
+<script>
+let selectedRole = 1;
+
+function setRole(role) {
+    selectedRole = role;
+    
+    const adminBtn = document.querySelector('.admin-btn');
+    const userBtn = document.querySelector('.user-btn');
+    
+    if (role === 2) {
+        adminBtn.style.background = '#4e73df';
+        adminBtn.style.color = 'white';
+        userBtn.style.background = '#e2e6ea';
+        userBtn.style.color = 'black';
+    } else {
+        userBtn.style.background = '#4e73df';
+        userBtn.style.color = 'white';
+        adminBtn.style.background = '#e2e6ea';
+        adminBtn.style.color = 'black';
+    }
+}
+
+function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+        alert("Please enter email and password");
+        return;
+    }
+
+    fetch("http://localhost:3000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            email: email,
+            password: password,
+            role_id: selectedRole
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.USER_ID){
+            localStorage.setItem("role_id", data.ROLE_ID);
+            localStorage.setItem("user_id", data.USER_ID);
+            localStorage.setItem("user_name", data.NAME);
+            localStorage.setItem("user_email", data.EMAIL);
+            window.location.href = "dashboard.html";
+        } else {
+            alert("Invalid credentials");
+        }
+    })
+    .catch(() => alert("Login failed"));
+}
+
+setRole(1);
+</script>
+
+</body>
+</html>

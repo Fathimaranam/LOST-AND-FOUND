@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Campus Lost & Found Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #eef1f5;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+            margin-bottom: 80px;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .toggle-bar {
+            display: flex;
+            background: #ddd;
+            border-radius: 30px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .toggle-bar button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .active {
+            background: #5b9bd5;
+            color: white;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .status-approved { color: green; font-weight: 600; }
+        .status-pending { color: orange; font-weight: 600; }
+        .status-rejected { color: red; font-weight: 600; }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .bottom-nav div {
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Campus Lost & Found</h1>
+
+    <div class="toggle-bar">
+        <button id="itemsTab" class="active" onclick="loadItems()">Items</button>
+        <button id="claimsTab" onclick="loadClaims()">Claims</button>
+    </div>
+
+    <div id="contentArea"></div>
+</div>
+
+<div class="bottom-nav">
+    <div onclick="goHome()">🏠<br>Home</div>
+      <div onclick="showSearch()">🔍<br>Search</div>
+    <div onclick="showUpload()">⬆<br>Upload</div>
+    <div onclick="showClaim()">📩<br>Claim</div>
+    <div onclick="showProfile()">👤<br>Profile</div>
+</div>
+
+<script>
+
+// Redirect if not logged in
+if (!localStorage.getItem("role_id")) {
+    window.location.href = "login.html";
+}
+
+let currentUser = {
+    user_id: parseInt(localStorage.getItem("user_id")),
+    role_id: parseInt(localStorage.getItem("role_id"))
+};
+
+function setActive(tab) {
+    document.getElementById("itemsTab").classList.remove("active");
+    document.getElementById("claimsTab").classList.remove("active");
+    document.getElementById(tab).classList.add("active");
+}
+
+// ================= LOAD ITEMS =================
+function loadItems() {
+    setActive("itemsTab");
+
+    fetch("http://localhost:3000/items")
+        .then(res => res.json())
+        .then(data => {
+            const area = document.getElementById("contentArea");
+            area.innerHTML = "";
+
+            data.forEach(item => {
+                area.innerHTML += `
+                    <div class="card">
+                        <strong>${item.ITEM_NAME}</strong><br>
+                        Status: ${item.STATUS}
+                        ${item.PHOTO ? 
+                        `<img src="http://localhost:3000/uploads/${item.PHOTO}" 
+                              style="width:100%;margin-top:10px;border-radius:10px;">`
+                        : ""}
+                    </div>
+                `;
+            });
+        });
+}
+
+// ================= LOAD CLAIMS =================
+function loadClaims() {
+    setActive("claimsTab");
+
+    fetch("http://localhost:3000/claims")
+        .then(res => res.json())
+        .then(data => {
+            const area = document.getElementById("contentArea");
+            area.innerHTML = "";
+
+            data.forEach(claim => {
+
+                let statusClass = "";
+                if (claim.CLAIM_STATUS === "Approved") statusClass = "status-approved";
+                if (claim.CLAIM_STATUS === "Pending") statusClass = "status-pending";
+                if (claim.CLAIM_STATUS === "Rejected") statusClass = "status-rejected";
+
+                let adminButtons = "";
+                if (currentUser.role_id === 2) {
+                    adminButtons = `
+                        <button onclick="updateStatus(${claim.CLAIM_ID}, 'Approved')">Approve</button>
+                        <button onclick="updateStatus(${claim.CLAIM_ID}, 'Rejected')">Reject</button>
+                    `;
+                }
+
+                area.innerHTML += `
+                    <div class="card">
+                        <strong>Item:</strong> ${claim.ITEM_NAME}<br>
+                        <strong>User:</strong> ${claim.USER_NAME}<br>
+                        <strong>Description:</strong> ${claim.PROOF_DESCRIPTION}<br>
+                        <span class="${statusClass}">
+                            ${claim.CLAIM_STATUS}
+                        </span><br>
+                        ${adminButtons}
+                    </div>
+                `;
+            });
+        });
+}
+
+// ================= UPLOAD FORM =================
+function showUpload() {
+    const area = document.getElementById("contentArea");
+
+    area.innerHTML = `
+        <div class="card">
+            <h3>Upload Found Item</h3>
+
+            <input type="text" id="itemName" placeholder="Item Name"><br><br>
+
+            <select id="locationSelect">
+                <option value="1">Office - 101</option>
+                <option value="2">Mech Block - 312</option>
+                <option value="3">CSE Block - 204</option>
+            </select><br><br>
+
+            <input type="file" id="photoInput"><br><br>
+
+            <button onclick="addItem()">Upload</button>
+        </div>
+    `;
+}
+
+// ================= ADD ITEM =================
+function addItem() {
+
+    const name = document.getElementById("itemName").value;
+    const locationId = document.getElementById("locationSelect").value;
+    const photoFile = document.getElementById("photoInput").files[0];
+
+    const formData = new FormData();
+    formData.append("item_name", name);
+    formData.append("user_id", currentUser.user_id);
+    formData.append("location_id", locationId);
+    formData.append("photo", photoFile);
+
+    fetch("http://localhost:3000/add-item", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert(data);
+        loadItems();
+    });
+}
+
+// ================= CLAIM FORM =================
+function showClaim() {
+
+    fetch("http://localhost:3000/items")
+        .then(res => res.json())
+        .then(data => {
+
+            let options = "";
+            data.forEach(item => {
+                options += `<option value="${item.ITEM_ID}">
+                                ${item.ITEM_NAME}
+                            </option>`;
+            });
+
+            document.getElementById("contentArea").innerHTML = `
+                <div class="card">
+                    <h3>Submit Claim</h3>
+                    <select id="claimItem">${options}</select><br><br>
+                    <textarea id="claimDescription" 
+                        placeholder="Enter description"></textarea><br><br>
+                    <button onclick="submitClaim()">Submit</button>
+                </div>
+            `;
+        });
+}
+
+// ================= SUBMIT CLAIM =================
+function submitClaim() {
+
+    const itemId = document.getElementById("claimItem").value;
+    const description = document.getElementById("claimDescription").value;
+
+    fetch("http://localhost:3000/submit-claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            user_id: currentUser.user_id,
+            item_id: itemId,
+            proof: description
+        })
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert(data);
+        loadItems();
+    });
+}
+
+// ================= UPDATE CLAIM =================
+function updateStatus(claimId, status) {
+    fetch("http://localhost:3000/update-claim-status", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ claim_id: claimId, status: status })
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert(data);
+        loadClaims();
+    });
+}
+
+function goHome() {
+    loadItems();
+}
+
+function showProfile() {
+    document.getElementById("contentArea").innerHTML = `
+        <div class="card">
+            <h3>Profile</h3>
+            Name: ${localStorage.getItem("user_name")}<br>
+            Email: ${localStorage.getItem("user_email")}<br><br>
+            <button onclick="logout()">Logout</button>
+        </div>
+    `;
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = "login.html";
+}
+
+loadItems();
+function showSearch() {
+
+    const area = document.getElementById("contentArea");
+
+    area.innerHTML = `
+        <div class="card">
+            <h3>Search Item</h3>
+            <input type="text" id="searchInput"
+                placeholder="Enter item name"
+                style="width:100%;padding:10px;margin-top:10px;">
+            <button onclick="searchItem()"
+                style="margin-top:10px;padding:10px;width:100%;background:#5b9bd5;color:white;border:none;border-radius:10px;">
+                Search
+            </button>
+        </div>
+    `;
+}
+
+function searchItem() {
+
+    const value = document.getElementById("searchInput").value;
+
+    fetch("http://localhost:3000/items")
+        .then(res => res.json())
+        .then(data => {
+
+            const area = document.getElementById("contentArea");
+            area.innerHTML = "";
+
+            data.filter(item =>
+                item.ITEM_NAME.toLowerCase().includes(value.toLowerCase())
+            )
+            .forEach(item => {
+
+                area.innerHTML += `
+                    <div class="card">
+                        <strong>${item.ITEM_NAME}</strong><br>
+                        Status: ${item.STATUS}
+                    </div>
+                `;
+            });
+        });
+}
+</script>
+
+</body>
+</html>
